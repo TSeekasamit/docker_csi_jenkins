@@ -7,7 +7,7 @@ RUN apk add --no-cache git openssh-client curl unzip bash ttf-dejavu coreutils
 
 ENV JENKINS_HOME /var/jenkins_home
 ENV JENKINS_SLAVE_AGENT_PORT 50000
-
+ENV JAVA_OPTS -Djava.awt.headless=true
 ARG user=gscadmin
 ARG group=gscadmin
 ARG uid=69192

@@ -1,13 +1,14 @@
-FROM openjdk:8-jdk-alpine
+FROM openjdk:8u111-jdk-alpine
+MAINTAINER Teerawit S. (teerawit.seekasamit@thomsonreuters.com)
 
-#ENV http_proxy http://webproxy.int.westgroup.com:80
-#ENV https_proxy http://webproxy.int.westgroup.com:80
+ENV http_proxy http://webproxy.int.westgroup.com:80
+ENV https_proxy http://webproxy.int.westgroup.com:80
 
 RUN apk add --no-cache git openssh-client curl unzip bash ttf-dejavu coreutils
 
 ENV JENKINS_HOME /var/jenkins_home
 ENV JENKINS_SLAVE_AGENT_PORT 50000
-ENV JAVA_OPTS -Djava.awt.headless=true
+
 ARG user=gscadmin
 ARG group=gscadmin
 ARG uid=69192
@@ -18,11 +19,10 @@ ARG gid=69192
 # ensure you use the same uid
 RUN addgroup -g ${gid} ${group} \
     && adduser -h "$JENKINS_HOME" -u ${uid} -G ${group} -s /bin/bash -D ${user}
-#	&& useradd -d "$JENKINS_HOME" -u ${uid} -g ${gid} -m -s /bin/bash ${user}
 
 # Jenkins home directory is a volume, so configuration and build history 
 # can be persisted and survive image upgrades
-VOLUME /var/jenkins_home
+VOLUME /var/jenkins_home /var/kettle_home
 
 # `/usr/share/jenkins/ref/` contains all reference configuration we want 
 # to set on a fresh new installation. Use it to bundle additional plugins 
@@ -68,7 +68,14 @@ USER ${user}
 
 COPY jenkins-support /usr/local/bin/jenkins-support
 COPY jenkins.sh /usr/local/bin/jenkins.sh
+
+#USER root
+#RUN chmod 777 /usr/local/bin/jenkins.sh
+#RUN chmod 777 /usr/local/bin/jenkins-support
+
+#USER ${user}
 ENTRYPOINT ["/bin/tini", "--", "/usr/local/bin/jenkins.sh"]
+
 
 # from a derived Dockerfile, can use `RUN plugins.sh active.txt` to setup /usr/share/jenkins/ref/plugins from a support bundle
 COPY plugins.sh /usr/local/bin/plugins.sh
